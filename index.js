@@ -7,7 +7,7 @@ const session = require('express-session');
 const passport = require('passport');
 const FacebookStrategy = require('passport-facebook').Strategy;
 const routes = require('./routes/userRouter');
-
+const users = require('./schemas/userSchema');
 
 const app = express();
 
@@ -36,11 +36,29 @@ passport.deserializeUser((obj, cb) => {
 passport.use(new FacebookStrategy({ 
     clientID: process.env.FB_APP_ID,
     clientSecret: process.env.FB_APP_SECRET,
-    callbackURL: "http://localhost:5000/auth/facebook/callback"
+    callbackURL: "http://localhost:5000/auth/facebook/callback",
+    profileFields: ['id', 'displayName', 'name', 'gender', 'email', 'picture']
     
-}, (accessToken, refreshToken, profile, done) => {
-    // if else for saving user data
-    return done(null, profile);
+}, async(accessToken, refreshToken, profile, done) => {
+    
+    try {
+        let existUser = await users.findOne({
+            id: profile.id
+        })
+    
+        if(!existUser) {
+            await new users({ ...profile._json, picture: profile.photos[0].value }).save();
+        }
+    
+    } catch (err) {
+        console.log(err)        
+    }
+
+    existUser = await users.findOne({
+        id: profile.id
+    })
+
+    return done(null, existUser);
 }))
 
 app.use('/', routes);   
