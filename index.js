@@ -1,5 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const cors = require('cors');
 const dotenv = require('dotenv');
 dotenv.config();
 
@@ -10,7 +11,14 @@ const routes = require('./routes/userRouter');
 const users = require('./schemas/userSchema');
 
 const app = express();
+app.use(express.json());
 
+
+app.use(cors({ 
+    credentials: true,
+    origin: 'http://localhost:3000',
+    methods: 'GET,POST,PUT,DELETE'
+}));
 
 app.set('view engine', 'ejs');
 
@@ -22,7 +30,6 @@ app.use(session({
 
 app.use(passport.initialize());
 app.use(passport.session());
-
 
 passport.serializeUser((user, cb) => {
     cb(null, user);
@@ -37,7 +44,7 @@ passport.use(new FacebookStrategy({
     clientID: process.env.FB_APP_ID,
     clientSecret: process.env.FB_APP_SECRET,
     callbackURL: "http://localhost:5000/auth/facebook/callback",
-    profileFields: ['id', 'displayName', 'name', 'gender', 'email', 'picture']
+    profileFields: ['id', 'displayName', 'name', 'gender', 'email', 'picture.type(large)']
     
 }, async(accessToken, refreshToken, profile, done) => {
     

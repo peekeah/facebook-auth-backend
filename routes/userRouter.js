@@ -3,14 +3,12 @@ const express = require("express");
 
 const router = express.Router();
 
-router.get("/", async (req, res) => {
-    res.render("pages/index.ejs");
-});
-
-router.get("/profile", isLoggedIn, async (req, res) => {
-    res.render("pages/profile.ejs", {
-        user: req.user,
-    });
+router.get("/login/success", isLoggedIn, async (req, res) => {
+    if(req.user) {
+        res.send(req.user)
+    } else {
+        res.status(403).send({ msg: 'Autentication failed'});
+    }
 });
 
 router.get("/error", isLoggedIn, async (req, res) => {
@@ -25,8 +23,8 @@ router.get("/auth/facebook",
 
 router.get("/auth/facebook/callback",
     passport.authenticate("facebook", {
-        successRedirect: "/profile",
-        failureRedirect: "/error",
+        successRedirect: "http://localhost:3000/profile",
+        failureRedirect: "http://localhost:3000",
     })
 );
 
@@ -35,7 +33,7 @@ router.get("/logout", (req, res) => {
         if (err) {
         return next(err);
         }
-        res.redirect("/");
+        res.redirect("http://localhost:3000");
     });
 });
 
@@ -44,7 +42,7 @@ function isLoggedIn(req, res, next) {
         return next();
     }
 
-    res.redirect("/");
+    res.status(403).send({ msg: 'error' });
 }
 
 module.exports = router;
